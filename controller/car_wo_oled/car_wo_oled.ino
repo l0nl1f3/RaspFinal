@@ -1,8 +1,14 @@
+#include <PinChangeInterruptSettings.h>
+#include <PinChangeInterruptPins.h>
+#include <PinChangeInterruptBoards.h>
+#include <PinChangeInterrupt.h>
+
+
+
+#include <MsTimer2.h>
 /* Based on code from www.minibalance.com
  */
 #include <Servo.h>
-#include <PinChangeInterrupt.h>
-#include <MsTimer2.h>
 
 #define AIN1 11
 #define AIN2 5
