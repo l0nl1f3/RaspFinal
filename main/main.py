@@ -23,7 +23,7 @@ def detect(pos):
         n = circles.shape[1]
         tpos = pos
         for i in circles [0,:]: # 画出识别的结果
-            if n == 1: 
+            if n == 1:
                 cv2.circle(frame, (i[0], i[1]), i[2], (0, 255 ,0), 2)
                 cv2.circle(frame, (i[0], i[1]), 2, (0, 0, 255), 3)
                 # print(abs(pos - i))
@@ -37,7 +37,7 @@ def detect(pos):
                     cv2.circle(frame, (i[0], i[1]), i[2], (0, 255, 0), 2)
                     cv2.circle(frame, (i[0], i[1]), 2, (0, 0, 255), 3)
                 # print(d)
-        cv2.imshow('Detected', frame)
+        #cv2.imshow('Detected', frame)
         if n != 1:
             pos[0] = tpos[0]
             pos[1] = tpos[1]
@@ -46,53 +46,85 @@ def detect(pos):
     else:
         return False
 
-def step_forward():
-    ser.write(str.encode('A'))
-    sleep(0.08)
-    ser.write(str.encode('Z'))
-    sleep(0.08)
+def sw(string):
+    ser.write(str.encode(string))
 
-def step_backward():
-    ser.write(str.encode('E'))
-    sleep(0.08)
-    ser.write(str.encode('Z'))
-    sleep(0.20)
+def _f():
+    sw('A')
 
-th1 = 1.5
+def _rf():
+    sw('B')
+
+def _r():
+    sw('C')
+
+def _rb():
+    sw('D')
+
+def _b():
+    sw('E')
+
+def _lb():
+    sw('F')
+
+def _l():
+    sw('G')
+
+def _lf():
+    sw('H')
+
+def _stop():
+    sw('Z')
+
+def _op_motor():
+    sw('I')
+
+hi_thres = 2000
+lo_thres = 1300
 pos = [0, 0, 0]
 pre_pos = [0, 0, 0]
-while (True):
-    if (detect(pos)):
-        if (pre_pos[2] == 0):
-            pre_pos = copy.deepcopy(pos)
-        else:
-            print(pre_pos, pos)
-            if (abs(pos[2] - pre_pos[2]) > th1):
-                T = 0
-                while (T <= 10 and abs(pos[2] - pre_pos[2]) > th1):
-                    T += 1
-                    if (pos[2] < pre_pos[2] + 1.):
-                        print("forward")
-                        step_forward() 
-                    else:
-                        step_backward()
-                        print("backward")
-                    while (not detect(pos)):
-                        pass
-                sleep(0.2)
-                print('end adjust !!')
-                pre_pos = [0, 0, 0]
-                # detect(pos)
-               # pre_pos = copy.deepcopy(pos)
-               # print(pos, pre_pos)
-                    
-    else:
-        print('miss')    
-    if cv2.waitKey(1) == ord("q"): # 等待按键
-        break
-    sleep(0.005)
 
-ser.write(str.encode('I'))
-ser.close()
-cv2.destroyAllWindows()
-cam.release()  # 关闭窗口
+try:
+    while (True):
+        if (detect(pos)):
+            area = pos[2] * pos[2]
+            print(pos, area)
+            x_shift = pos[0] - 240
+            lef = x_shift < -120
+            rig = x_shift > +120
+            fwd = area < lo_thres
+            bwd = area > hi_thres
+            if (not lef and not rig and not fwd and not bwd):
+                _stop()
+            elif (not fwd and not bwd):
+                if lef:
+                    _l()
+                else:
+                    _r()
+            elif (not lef and not rig):
+                if fwd:
+                    _f()
+                else:
+                    _b()
+            else:
+                t = lef * 2 + fwd
+                if (t == 0):
+                    _lb()
+                if (t == 1):
+                    _rf()
+                if (t == 2):
+                    _rb()
+                if (t == 3): 
+                    _lf()
+        else:
+            _stop()
+            print('miss')    
+        if cv2.waitKey(1) == ord("q"): # 等待按键
+            break
+        sleep(0.005)
+except KeyboardInterrupt:
+    ser.write(str.encode('Z'))
+    sleep(0.2)
+    ser.close()
+    cv2.destroyAllWindows()
+    cam.release()  # 关闭窗口
