@@ -9,8 +9,8 @@ ser.open()
 sleep(3)
 
 cam = cv2.VideoCapture(0) # 打开摄像头
-cam.set(3, 480)
-cam.set(4, 360)
+cam.set(3, 960)
+cam.set(4, 720)
 
 def detect(pos): 
     ret , frame = cam.read() # 获取摄像头数据
@@ -18,7 +18,7 @@ def detect(pos):
     blur = cv2.blur(grey,(5,5)) # 过滤噪声
     circles = cv2.HoughCircles(blur, # 识别圆形
     method = cv2.HOUGH_GRADIENT,dp = 1,minDist = 100,
-    param1 = 100,param2 = 33,minRadius = 15,maxRadius = 85)
+    param1 = 100,param2 = 33,minRadius = 30,maxRadius = 170)
     if circles is not None: # 识别到圆形
         n = circles.shape[1]
         tpos = pos
@@ -79,19 +79,21 @@ def _stop():
 def _op_motor():
     sw('I')
 
-hi_thres = 2000
-lo_thres = 1300
+hi_thres = 1800 * 4
+lo_thres = 1000 * 4
 pos = [0, 0, 0]
 pre_pos = [0, 0, 0]
 
 try:
     while (True):
+        miss = 0
         if (detect(pos)):
+            miss = 0
             area = pos[2] * pos[2]
             print(pos, area)
-            x_shift = pos[0] - 240
-            lef = x_shift < -120
-            rig = x_shift > +120
+            x_shift = pos[0] - 480
+            lef = x_shift < -180
+            rig = x_shift > +180
             fwd = area < lo_thres
             bwd = area > hi_thres
             if (not lef and not rig and not fwd and not bwd):
@@ -117,11 +119,13 @@ try:
                 if (t == 3): 
                     _lf()
         else:
-            _stop()
+            miss += 1
+            if miss > 5:
+                _stop()
             print('miss')    
         if cv2.waitKey(1) == ord("q"): # 等待按键
             break
-        sleep(0.005)
+        sleep(0.002)
 except KeyboardInterrupt:
     ser.write(str.encode('Z'))
     sleep(0.2)
