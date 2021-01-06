@@ -18,7 +18,7 @@ def detect(pos):
     blur = cv2.blur(grey,(5,5)) # 过滤噪声
     circles = cv2.HoughCircles(blur, # 识别圆形
     method = cv2.HOUGH_GRADIENT,dp = 1,minDist = 100,
-    param1 = 100,param2 = 33,minRadius = 30,maxRadius = 170)
+    param1 = 100,param2 = 33,minRadius = 35,maxRadius = 170)
     if circles is not None: # 识别到圆形
         n = circles.shape[1]
         tpos = pos
@@ -92,8 +92,8 @@ try:
             area = pos[2] * pos[2]
             print(pos, area)
             x_shift = pos[0] - 480
-            lef = x_shift < -180
-            rig = x_shift > +180
+            lef = x_shift < -140
+            rig = x_shift > +140
             fwd = area < lo_thres
             bwd = area > hi_thres
             if (not lef and not rig and not fwd and not bwd):
@@ -122,6 +122,7 @@ try:
             miss += 1
             if miss > 5:
                 _stop()
+                sleep(0.005)
             print('miss')    
         if cv2.waitKey(1) == ord("q"): # 等待按键
             break
